@@ -55,7 +55,7 @@
                         tp.left = pos.left + pos.width / 2 - actualWidth + 15;
                     }
                 }
-                
+
                 $tip.css(tp).addClass('tipsy-' + gravity);
                 
                 if (this.options.fade) {
@@ -95,8 +95,13 @@
         },
         
         tip: function() {
+            var outer = ['<div class="tipsy"'];
+            if (!this.options.multiple) {
+              outer.push(' id="tipsy-unique"')
+            }
+            outer.push('></div>');
             if (!this.$tip) {
-                this.$tip = $('<div class="tipsy"></div>').html('<div class="tipsy-arrow"></div><div class="tipsy-inner"></div>');
+                this.$tip = $(outer.join('')).html('<div class="tipsy-arrow"></div><div class="tipsy-inner"></div>');
             }
             return this.$tip;
         },
@@ -136,6 +141,9 @@
         }
         
         function enter() {
+            if (!options.multiple) {
+              $('#tipsy-unique').remove();
+            }
             var tipsy = get(this);
             tipsy.hoverState = 'in';
             if (options.delayIn == 0) {
@@ -180,7 +188,8 @@
         offset: 0,
         opacity: 0.8,
         title: 'title',
-        trigger: 'hover'
+        trigger: 'hover',
+        multiple:true
     };
     
     // Overwrite this method to provide options on a per-element basis.
