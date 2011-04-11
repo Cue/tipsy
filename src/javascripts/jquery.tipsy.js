@@ -18,9 +18,9 @@
             if (title && this.enabled) {
                 var $tip = this.tip();
                 
-                $tip.find('.tipsy-inner')[this.options.html ? 'html' : 'text'](title);
-                $tip[0].className = 'tipsy'; // reset classname in case of dynamic gravity
-                $tip.remove().css({top: 0, left: 0, visibility: 'hidden', display: 'block'}).appendTo(document.body);
+                $tip.find(this.getName('inner', '.'))[this.options.html ? 'html' : 'text'](title);
+                $tip[0].className = this.options.namespace; // reset classname in case of dynamic gravity
+                $tip.remove().css({top: 0, left: 0, visibility: 'hidden', display: 'block'}).appendTo(this.options.base);
                 
                 var pos = $.extend({}, this.$element.offset(), {
                     width: this.$element[0].offsetWidth,
@@ -56,7 +56,7 @@
                     }
                 }
 
-                $tip.css(tp).addClass('tipsy-' + gravity);
+                $tip.css(tp).addClass(this.getName(gravity));
                 
                 if (this.options.fade) {
                     $tip.stop().css({opacity: 0, display: 'block', visibility: 'visible'}).animate({opacity: this.options.opacity});
@@ -95,15 +95,21 @@
         },
         
         tip: function() {
-            var outer = ['<div class="tipsy"'];
+            var outer = ['<div class="', this.options.namespace,'"'];
             if (!this.options.multiple) {
-              outer.push(' id="tipsy-unique"')
+              outer = outer.concat([' id="', this.getName('unique'), '"'])
             }
             outer.push('></div>');
             if (!this.$tip) {
-                this.$tip = $(outer.join('')).html('<div class="tipsy-arrow"></div><div class="tipsy-inner"></div>');
+                this.$tip = $(outer.join('')).html([
+                  '<div class="', this.getName('arrow'), '"></div><div class="',
+                  this.getName('inner'), '"></div>'].join(''));
             }
             return this.$tip;
+        },
+
+        getName: function(attr, ident) {
+          return [ident || '', this.options.namespace, '-', attr].join('');
         },
         
         validate: function() {
@@ -122,9 +128,9 @@
     $.fn.tipsy = function(options) {
         
         if (options === true) {
-            return this.data('tipsy');
+            return this.data($.fn.tipsy.defaults.namespace);
         } else if (typeof options == 'string') {
-            var tipsy = this.data('tipsy');
+            var tipsy = this.data($.fn.tipsy.defaults.namespace);
             if (tipsy) tipsy[options]();
             return this;
         }
@@ -132,19 +138,20 @@
         options = $.extend({}, $.fn.tipsy.defaults, options);
         
         function get(ele) {
-            var tipsy = $.data(ele, 'tipsy');
+            var tipsy = $.data(ele, options.namespace);
             if (!tipsy) {
                 tipsy = new Tipsy(ele, $.fn.tipsy.elementOptions(ele, options));
-                $.data(ele, 'tipsy', tipsy);
+                $.data(ele, options.namespace, tipsy);
             }
             return tipsy;
         }
         
         function enter() {
-            if (!options.multiple) {
-              $('#tipsy-unique').remove();
-            }
             var tipsy = get(this);
+            if (!options.multiple) {
+              $(tipsy.getName('unique', '#')).remove();
+            }
+
             tipsy.hoverState = 'in';
             if (options.delayIn == 0) {
                 tipsy.show();
@@ -189,7 +196,9 @@
         opacity: 0.8,
         title: 'title',
         trigger: 'hover',
-        multiple:true
+        multiple:true,
+        namespace:'greplin-tipsy',
+        base:document.body
     };
     
     // Overwrite this method to provide options on a per-element basis.
